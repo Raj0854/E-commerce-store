@@ -8,6 +8,8 @@ const categorySelect =
     document.getElementById("category");
 
 let allProducts = [];
+// console.log(allProducts);
+
 
 async function getProducts() {
 
@@ -21,6 +23,9 @@ async function getProducts() {
         const products =
             await response.json();
 
+        // console.log(products);
+
+
         allProducts = products;
 
         displayProducts(products);
@@ -28,6 +33,8 @@ async function getProducts() {
     } catch (error) {
         console.log(error);
     }
+
+    // category
     const categoryResponse =
         await fetch(
             "https://fakestoreapi.com/products/categories"
@@ -37,32 +44,23 @@ async function getProducts() {
         await categoryResponse.json();
 
     categories.forEach(category => {
-
         categorySelect.innerHTML += `
-    <option value="${category}">
-      ${category}
-    </option>
-  `;
+        <option value="${category}">${category}</option> `;
     });
-    categorySelect.addEventListener(
-        "change",
-        e => {
 
-            const value = e.target.value;
+    categorySelect.addEventListener("change", e => {
+        const value = e.target.value;
+        if (value === "all") {
+            displayProducts(allProducts);
+            return;
+        }
+        const filtered = allProducts.filter(product =>
+            product.category === value
+        );
+        // console.log(filtered);
 
-            if (value === "all") {
-                displayProducts(allProducts);
-                return;
-            }
-
-            const filtered =
-                allProducts.filter(
-                    product =>
-                        product.category === value
-                );
-
-            displayProducts(filtered);
-        });
+        displayProducts(filtered);
+    });
 }
 
 function displayProducts(products) {
@@ -74,17 +72,9 @@ function displayProducts(products) {
         productContainer.innerHTML += `
       <div class="card">
         <img src="${product.image}">
-        
         <h3>${product.title}</h3>
-
         <p>₹${product.price}</p>
-
-        <button
-          class="btn"
-          onclick="addToCart(${product.id})"
-        >
-          Add To Cart
-        </button>
+        <button class="btn" onclick="addToCart(${product.id})">Add To Cart</button>
         <button class= "btn" onclick="showDetails(${product.id})">View Details</button>
       </div>
     `;
@@ -92,35 +82,17 @@ function displayProducts(products) {
 };
 
 function addToCart(id) {
-
-    const product =
-        allProducts.find(
-            item => item.id === id
-        );
-
-    let cart =
-        JSON.parse(
-            localStorage.getItem("cart")
-        ) || [];
-
-    const existing =
-        cart.find(
-            item => item.id === id
-        );
-
+    const product = allProducts.find(item => item.id === id);
+    // console.log(product)
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const existing = cart.find(item => item.id === id);
     if (existing) {
         existing.quantity += 1;
     } else {
-        cart.push({
-            ...product,
-            quantity: 1
-        });
+        cart.push({ ...product, quantity: 1 });
     }
 
-    localStorage.setItem(
-        "cart",
-        JSON.stringify(cart)
-    );
+    localStorage.setItem("cart", JSON.stringify(cart));
 
     updateCartCount();
 
@@ -129,54 +101,28 @@ function addToCart(id) {
 };
 
 function showDetails(id) {
-
-    const product =
-        allProducts.find(
-            item => item.id === id
-        );
-
-    alert(
-        `
-${product.title}
-
+    const product = allProducts.find(item => item.id === id);
+    alert(`${product.title}
 Price: ₹${product.price}
-
-Category:
-${product.category}
-
-Rating:
-${product.rating.rate}
- `
-    );
+Category:${product.category}
+Rating:${product.rating.rate} `);
 }
 
 function updateCartCount() {
 
-    let cart =
-        JSON.parse(
-            localStorage.getItem("cart")
-        ) || [];
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-    document.getElementById(
-        "cart-count"
-    ).textContent = cart.length;
+    let cartCount = document.getElementById("cart-count")
+    cartCount.textContent = cart.length;
 }
 
 updateCartCount();
 getProducts();
 
-searchInput.addEventListener(
-    "input", e => {
+searchInput.addEventListener("input", e => {
+    const value =e.target.value.toLowerCase();
 
-        const value =
-            e.target.value.toLowerCase();
+    const filtered =allProducts.filter(product => product.title.toLowerCase().includes(value));
 
-        const filtered =
-            allProducts.filter(product =>
-                product.title
-                    .toLowerCase()
-                    .includes(value)
-            );
-
-        displayProducts(filtered);
-    });
+    displayProducts(filtered);
+});
